@@ -1,0 +1,9 @@
+{
+	"name": "AdetolaADF",
+	"location": "centralus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "2a3c06eb-946a-48c5-aa8d-7ce9eb7b8903",
+		"tenantId": "a599f785-d5f6-4172-9b2b-aa4fc9d8dd40"
+	}
+}
