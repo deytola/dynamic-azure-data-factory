@@ -29,7 +29,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat(dataset().serverName, \n    '/', dataset().databaseName,\n    '/Year=', formatDateTime(utcNow(), 'yyyy'),\n    '/Month=', formatDateTime(utcNow(), 'MM'),\n    '/Day=', formatDateTime(utcNow(), 'dd')\n)",
+					"value": "@concat(dataset().serverName, \n    '/', dataset().databaseName,\n    '/', dataset().tableName,\n    '/Year=', formatDateTime(utcNow(), 'yyyy'),\n    '/Month=', formatDateTime(utcNow(), 'MM'),\n    '/Day=', formatDateTime(utcNow(), 'dd')\n)",
 					"type": "Expression"
 				},
 				"fileSystem": "raw"
