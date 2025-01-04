@@ -11,6 +11,9 @@
 		"GenericAzureSQLDB_LS_password": {
 			"value": ""
 		},
+		"SecureAzureSqlDatabase_LS_password": {
+			"value": ""
+		},
 		"ADLSg2_LS_properties_typeProperties_url": {
 			"value": "https://adedp203storageacc.dfs.core.windows.net/"
 		},
@@ -22,6 +25,21 @@
 		},
 		"GenericAzureSQLDB_LS_properties_typeProperties_userName": {
 			"value": "sysadmin"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_server": {
+			"value": "toladberver.database.windows.net"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_database": {
+			"value": "TolaDB"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_userName": {
+			"value": "sysadmin"
+		},
+		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+			"value": "/subscriptions/8f55ffcf-6dec-4f5e-8357-6e4921d42ef3/resourceGroups/DP203/providers/Microsoft.Sql/servers/toladberver"
+		},
+		"AzureSqlDatabase_MPE_properties_groupId": {
+			"value": "sqlServer"
 		}
 	}
 }

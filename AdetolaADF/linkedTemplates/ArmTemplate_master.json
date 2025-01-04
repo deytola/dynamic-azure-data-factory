@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'GenericAzureSQLDB_LS'"
 		},
+		"SecureAzureSqlDatabase_LS_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SecureAzureSqlDatabase_LS'"
+		},
 		"ADLSg2_LS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://adedp203storageacc.dfs.core.windows.net/"
@@ -30,6 +34,26 @@
 		"GenericAzureSQLDB_LS_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "sysadmin"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "toladberver.database.windows.net"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "TolaDB"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "sysadmin"
+		},
+		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/8f55ffcf-6dec-4f5e-8357-6e4921d42ef3/resourceGroups/DP203/providers/Microsoft.Sql/servers/toladberver"
+		},
+		"AzureSqlDatabase_MPE_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
 		},
 		"containerUri": {
 			"type": "string",
@@ -64,6 +88,9 @@
 					"GenericAzureSQLDB_LS_password": {
 						"value": "[parameters('GenericAzureSQLDB_LS_password')]"
 					},
+					"SecureAzureSqlDatabase_LS_password": {
+						"value": "[parameters('SecureAzureSqlDatabase_LS_password')]"
+					},
 					"ADLSg2_LS_properties_typeProperties_url": {
 						"value": "[parameters('ADLSg2_LS_properties_typeProperties_url')]"
 					},
@@ -75,6 +102,21 @@
 					},
 					"GenericAzureSQLDB_LS_properties_typeProperties_userName": {
 						"value": "[parameters('GenericAzureSQLDB_LS_properties_typeProperties_userName')]"
+					},
+					"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+						"value": "[parameters('AzureSqlDatabase_MPE_properties_privateLinkResourceId')]"
+					},
+					"AzureSqlDatabase_MPE_properties_groupId": {
+						"value": "[parameters('AzureSqlDatabase_MPE_properties_groupId')]"
+					},
+					"SecureAzureSqlDatabase_LS_properties_typeProperties_server": {
+						"value": "[parameters('SecureAzureSqlDatabase_LS_properties_typeProperties_server')]"
+					},
+					"SecureAzureSqlDatabase_LS_properties_typeProperties_database": {
+						"value": "[parameters('SecureAzureSqlDatabase_LS_properties_typeProperties_database')]"
+					},
+					"SecureAzureSqlDatabase_LS_properties_typeProperties_userName": {
+						"value": "[parameters('SecureAzureSqlDatabase_LS_properties_typeProperties_userName')]"
 					}
 				}
 			},

@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'GenericAzureSQLDB_LS'"
 		},
+		"SecureAzureSqlDatabase_LS_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SecureAzureSqlDatabase_LS'"
+		},
 		"ADLSg2_LS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://adedp203storageacc.dfs.core.windows.net/"
@@ -28,6 +32,26 @@
 			"defaultValue": "@{linkedService().databaseName}"
 		},
 		"GenericAzureSQLDB_LS_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "sysadmin"
+		},
+		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/8f55ffcf-6dec-4f5e-8357-6e4921d42ef3/resourceGroups/DP203/providers/Microsoft.Sql/servers/toladberver"
+		},
+		"AzureSqlDatabase_MPE_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "toladberver.database.windows.net"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "TolaDB"
+		},
+		"SecureAzureSqlDatabase_LS_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "sysadmin"
 		}
@@ -84,6 +108,13 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ADLSg2CSV_DS')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -116,7 +147,7 @@
 							"type": "Expression"
 						},
 						"folderPath": {
-							"value": "@concat(dataset().serverName, \n    '/', dataset().databaseName,\n    '/Year=', formatDateTime(utcNow(), 'yyyy'),\n    '/Month=', formatDateTime(utcNow(), 'MM'),\n    '/Day=', formatDateTime(utcNow(), 'dd')\n)",
+							"value": "@concat(dataset().serverName, \n    '/', dataset().databaseName,\n    '/', dataset().tableName,\n    '/Year=', formatDateTime(utcNow(), 'yyyy'),\n    '/Month=', formatDateTime(utcNow(), 'MM'),\n    '/Day=', formatDateTime(utcNow(), 'dd')\n)",
 							"type": "Expression"
 						},
 						"fileSystem": "raw"
@@ -166,6 +197,50 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/GenericAzureSQLDB_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ManagedVNetIR')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "Central US",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						},
+						"pipelineExternalComputeScaleProperties": {
+							"timeToLive": 60,
+							"numberOfPipelineNodes": 1,
+							"numberOfExternalNodes": 1
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default/AzureSqlDatabase_MPE')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks/managedPrivateEndpoints",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"privateLinkResourceId": "[parameters('AzureSqlDatabase_MPE_properties_privateLinkResourceId')]",
+				"groupId": "[parameters('AzureSqlDatabase_MPE_properties_groupId')]"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
 			]
 		},
 		{
@@ -335,6 +410,34 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/GenericAzureSqlDB_DS')]",
 				"[concat(variables('factoryId'), '/datasets/ADLSg2CSV_DS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SecureAzureSqlDatabase_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('SecureAzureSqlDatabase_LS_properties_typeProperties_server')]",
+					"database": "[parameters('SecureAzureSqlDatabase_LS_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('SecureAzureSqlDatabase_LS_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('SecureAzureSqlDatabase_LS_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ManagedVNetIR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ManagedVNetIR')]"
 			]
 		}
 	]
