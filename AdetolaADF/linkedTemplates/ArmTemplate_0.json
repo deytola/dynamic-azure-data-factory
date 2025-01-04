@@ -1,0 +1,341 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "AdetolaADF"
+		},
+		"ADLSg2_LS_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLSg2_LS'"
+		},
+		"GenericAzureSQLDB_LS_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'GenericAzureSQLDB_LS'"
+		},
+		"ADLSg2_LS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adedp203storageacc.dfs.core.windows.net/"
+		},
+		"GenericAzureSQLDB_LS_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "@{linkedService().serverName}"
+		},
+		"GenericAzureSQLDB_LS_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().databaseName}"
+		},
+		"GenericAzureSQLDB_LS_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "sysadmin"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLSg2_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ADLSg2_LS_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ADLSg2_LS_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GenericAzureSQLDB_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"serverName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('GenericAzureSQLDB_LS_properties_typeProperties_server')]",
+					"database": "[parameters('GenericAzureSQLDB_LS_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('GenericAzureSQLDB_LS_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('GenericAzureSQLDB_LS_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLSg2CSV_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLSg2_LS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"serverName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string"
+					},
+					"schemaName": {
+						"type": "string"
+					},
+					"tableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat(dataset().schemaName, '_', dataset().tableName, '.csv')",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat(dataset().serverName, \n    '/', dataset().databaseName,\n    '/Year=', formatDateTime(utcNow(), 'yyyy'),\n    '/Month=', formatDateTime(utcNow(), 'MM'),\n    '/Day=', formatDateTime(utcNow(), 'dd')\n)",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLSg2_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GenericAzureSqlDB_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "GenericAzureSQLDB_LS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"serverName": {
+							"value": "@dataset().serverName",
+							"type": "Expression"
+						},
+						"databaseName": {
+							"value": "@dataset().databaseName",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"serverName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/GenericAzureSQLDB_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DynamicPipeLine')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get a list of tables to be processed",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT QUOTENAME(t.name) AS tableName, QUOTENAME (SCHEMA_NAME (t.schema_id)) AS schemaName FROM sys.tables as t;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "GenericAzureSqlDB_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"serverName": {
+										"value": "@pipeline().parameters.serverName",
+										"type": "Expression"
+									},
+									"databaseName": {
+										"value": "@pipeline().parameters.databaseName",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Iterate over all tables",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get a list of tables to be processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get a list of tables to be processed').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy data from table",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "@concat('SELECT * FROM', item().schemaName, '.', item().tableName)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "GenericAzureSqlDB_DS",
+											"type": "DatasetReference",
+											"parameters": {
+												"serverName": {
+													"value": "@pipeline().parameters.serverName",
+													"type": "Expression"
+												},
+												"databaseName": {
+													"value": "@pipeline().parameters.databaseName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ADLSg2CSV_DS",
+											"type": "DatasetReference",
+											"parameters": {
+												"serverName": {
+													"value": "@pipeline().parameters.serverName",
+													"type": "Expression"
+												},
+												"databaseName": {
+													"value": "@pipeline().parameters.databaseName",
+													"type": "Expression"
+												},
+												"schemaName": {
+													"value": "@item().schemaName",
+													"type": "Expression"
+												},
+												"tableName": {
+													"value": "@item().tableName",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"serverName": {
+						"type": "string",
+						"defaultValue": "toladberver.database.windows.net"
+					},
+					"databaseName": {
+						"type": "string",
+						"defaultValue": "TolaDB"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-01-04T20:02:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/GenericAzureSqlDB_DS')]",
+				"[concat(variables('factoryId'), '/datasets/ADLSg2CSV_DS')]"
+			]
+		}
+	]
+}
