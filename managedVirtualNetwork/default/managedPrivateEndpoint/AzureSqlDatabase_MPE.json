@@ -1,0 +1,7 @@
+{
+	"name": "AzureSqlDatabase_MPE",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/8f55ffcf-6dec-4f5e-8357-6e4921d42ef3/resourceGroups/DP203/providers/Microsoft.Sql/servers/toladberver",
+		"groupId": "sqlServer"
+	}
+}
